@@ -1,0 +1,22 @@
+SELECT
+country_code,
+city_code,
+am_email,
+action,
+other_entity_id as sap_customer_number,
+expected_invoice_date,
+invoice_description,
+po_number,
+sum(amount_local_currency) as amount -- if you want to get the amounts in positive value remove the *-1
+FROM "delta"."partner__ads_revenue__odp"."partner_ads_sale_order_items"
+WHERE 1=1
+AND origin = 'salesforce'
+AND action = 'Invoice'
+AND opportunity_status = 'Closed Won'
+AND country_code = 'ES'
+AND expected_invoice_date >= DATE('2024-10-01')
+AND expected_invoice_date<=  DATE('2024-10-31')
+AND bill_to = 'Other Entity ID'
+GROUP BY 1,2,3,4,5,6,7,8
+ORDER BY 5
+;
