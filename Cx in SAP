@@ -1,0 +1,19 @@
+SELECT safd.store_address_id,
+       invoicing_detail_name,
+       invoicing_detail_tax_id,
+       invoicing_detail_postal_code,
+       invoicing_detail_city_name,
+       invoicing_detail_address_line_1,
+       invoicing_detail_address_line_2,
+       invoicing_detail_country_code,
+       invoicing_detail_primary_email
+FROM sensitive_delta.sensitive_fintech__financial_actors__odp.store_address_financial_details safd
+         LEFT JOIN delta.fintech_financial_platform_odp.bls_actors ba
+                   ON safd.store_address_id = ba.external_id
+                       AND ba.type = 'PARTNER'
+         LEFT JOIN delta.partner_stores_odp.store_addresses_V2 sav2
+                   ON safd.store_address_id = sav2.store_address_id
+                       AND sav2.p_end_date IS NULL
+WHERE safd.invoicing_detail_country_code = 'ES'
+  AND ba.partner_family = 'BURGERKING'
+  AND sav2.store_address_is_marketplace = TRUE
