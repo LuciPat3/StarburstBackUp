@@ -1,0 +1,31 @@
+SET time zone 'UTC'
+
+-- GEN1 + CASH
+-------
+WITH filters
+         AS (SELECT
+                 /* To filter please only modify the 3 lines below, bear in mind
+                    ending date is Not Included so always consider +1 day */
+                 TIMESTAMP '2025-02-01 00:00:00 UTC' AS starting_date,
+                 TIMESTAMP '2025-02-28 00:00:00 UTC' AS ending_date,
+                 'ES'                                AS country)
+SELECT fom.store_address_id
+       ,SUM(fom.order_service_fee_local_currency)
+     /* comment or uncomment low below to have order id level*/
+       ,fom.order_id
+FROM delta.finance_financial_metrics_odp.financial_order_metrics fom
+LEFT JOIN delta.fintech_financial_platform_odp.bls_actors ba
+    ON fom.store_address_id = ba.external_id
+         CROSS JOIN filters f
+
+WHERE 1 = 1
+  AND fom.order_country_code = f.country
+  AND fom.p_creation_date >= f.starting_date - INTERVAL '2' MONTH
+  AND fom.order_terminated_local_at >= f.starting_date
+  AND fom.order_terminated_local_at < f.ending_date
+  AND fom.order_is_marketplace
+  AND ba.partner_family = 'BURGERKING'
+  AND fom.payment_1_payment_method = 'CASH'
+/* filter below only used in case you want to filter by specific order id */
+    --AND fom.order_id  in ()
+GROUP BY 1, 3;
