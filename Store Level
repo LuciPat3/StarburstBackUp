@@ -1,0 +1,40 @@
+SELECT fom.order_country_code,
+       fom.order_id,
+       fom.order_code,
+       fom.store_address_id,       
+       fom.order_activated_local_at,
+       fom.order_dispatched_local_at,
+       fom.order_accepted_by_partner_local_at,
+       fom.order_activated_local_at,
+       fom.order_final_status,
+       fom.partner_cancellation_strategy,
+       case
+        when 
+            fom.order_total_purchase_local_currency = 0 
+            and ((fom.partner_cancellation_strategy = 'PAY_PRODUCTS' AND fom.order_final_status = 'CanceledStatus') 
+            or fom.order_parent_relationship_type in ('REORDER_COMPENSATION', 'REMAKE'))
+                then
+                    case when fom.order_country_code = 'TN' 
+                        then FORMAT('%.3f', COALESCE(fom.order_estimated_purchase_local_currency, 0))
+                        else FORMAT('%.2f', COALESCE(fom.order_estimated_purchase_local_currency, 0))
+                    end
+                else
+                    case when fom.order_country_code = 'TN' 
+                        then FORMAT('%.3f', COALESCE(fom.order_total_purchase_local_currency, 0))
+                        else FORMAT('%.2f', COALESCE(fom.order_total_purchase_local_currency, 0))
+                    end                     
+      end as supply_delayed
+FROM delta.finance_financial_metrics_odp.financial_order_metrics fom
+WHERE
+    fom.order_country_code = 'ES'
+    AND fom.p_creation_date >= TIMESTAMP '2025-03-03' - interval '30' day
+    AND fom.p_creation_date <= TIMESTAMP '2025-03-09' + interval '1' day
+    AND fom.order_dispatched_local_at >= TIMESTAMP '2025-03-03 00:00:00 UTC'
+    AND fom.order_dispatched_local_at <= TIMESTAMP '2025-03-09 23:59:59 UTC'
+    AND fom.order_is_partner_order
+    AND fom.partner_cancellation_strategy <> ('PAY_NOTHING')
+    AND fom.order_final_status IN ('DeliveredStatus', 'CanceledStatus')
+    /* Add this filter if you want to see the result just for one/several orders */
+    --- AND fom.order_id IN (101238758603,101238728952,101238757338,101238761611,101238730990,101238732118,101238731318,101238732370,101238731103,101238731695,101238732497,101238732358,101238731689,101238760437,101238763189,101238732549,101238732802,101238732696,101238733313,101238732762,101238732815,101238733552,101238734065,101238733143,101238733203,101238734381,101238761763,101238735564,101238737120,101238738248,101238738800,101238738540,101238739391,101238739317,101238739439,101238740541,101238740236,101238740481,101238741100,101238740680,101238741153,101238742576,101238743519,101238744158,101238746422,101238746043,101238748164,101238748623,101238748409,101238749183,101238750173,101238751591,101242489199)
+    /* Add this filter if you want to see the result just for one or several store_address_id */
+    AND fom.store_address_id IN (352525,165306,165359,165317,165362,165288,165337,165386,164228,165312,178528,165291,165331,165313,164223,185389,198059,363289,164232,165314,165447,165309,178093,260844,178547,165328,165364,165286,198065,198076,165280,327687,165282,165360,165302,165287,182880,440735,447738,447928,454340,755691)
