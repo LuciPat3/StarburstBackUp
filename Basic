@@ -1,0 +1,2 @@
+SELECT *  FROM delta.finance_financial_metrics_odp.financial_order_metrics
+WHERE order_id in (100729284041,100729348069)
