@@ -1,0 +1,23 @@
+SELECT 
+    country_code,
+    am_email,
+    action,
+    other_entity_id as sap_customer_number, 
+    expected_invoice_date, 
+    invoice_description,
+    po_number,
+    ROUND(SUM(amount_local_currency), 2) as amount
+FROM 
+    "delta"."partner__ads_revenue__odp"."partner_ads_sale_order_items"
+WHERE 
+    origin = 'salesforce'
+    AND action = 'Invoice'
+    AND opportunity_status = 'Closed Won'
+    AND country_code = 'ES'
+    AND expected_invoice_date >= DATE('2025-02-01')
+    AND expected_invoice_date <= DATE('2025-02-28')
+    AND bill_to = 'Other Entity ID' 
+GROUP BY 
+    1, 2, 3, 4, 5, 6, 7
+ORDER BY 
+    4;
