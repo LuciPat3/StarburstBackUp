@@ -1,0 +1,4 @@
+SELECT *  
+FROM delta.finance_financial_metrics_odp.financial_order_metrics
+WHERE p_creation_date = DATE '2025-03-28';
+WHERE order_id in (100729284041,100729348069)
